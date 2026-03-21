@@ -15,4 +15,16 @@ const nextConfig: NextConfig = {
   },
 };
 
+async redirects() {
+    return [
+      {
+        source: "/product-category/:slug",
+        destination: "/c/:slug",
+        permanent: true,
+      },
+    ];
+  },
+};
+
+
 export default nextConfig;
