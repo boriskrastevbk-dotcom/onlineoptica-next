@@ -101,26 +101,23 @@ function buildItemsHtml(items: CheckoutItem[]) {
 
       return `
 <tr>
-<td style="padding:12px;border-bottom:1px solid #eee;">
-<div style="font-weight:600">${escapeHtml(
-        it.name || `Продукт #${it.productId}`
-      )}</div>
-${
-  extraLines.length
-    ? `<div style="font-size:13px;color:#555;margin-top:6px">${extraLines.join(
-        "<br>"
-      )}</div>`
-    : ""
-}
-</td>
-
-<td style="padding:12px;border-bottom:1px solid #eee;text-align:center">${qty}</td>
-<td style="padding:12px;border-bottom:1px solid #eee;text-align:right">${euro(
-        price
-      )}</td>
-<td style="padding:12px;border-bottom:1px solid #eee;text-align:right;font-weight:600">${euro(
-        rowTotal
-      )}</td>
+  <td style="padding:12px;border-bottom:1px solid #eee;vertical-align:top;">
+    <div style="font-weight:600">${escapeHtml(it.name || `Продукт #${it.productId}`)}</div>
+    ${
+      extraLines.length
+        ? `<div style="font-size:13px;color:#555;margin-top:6px;line-height:1.5;">${extraLines.join(
+            "<br>"
+          )}</div>`
+        : ""
+    }
+  </td>
+  <td style="padding:12px;border-bottom:1px solid #eee;text-align:center;vertical-align:top;">${qty}</td>
+  <td style="padding:12px;border-bottom:1px solid #eee;text-align:right;vertical-align:top;">${euro(
+    price
+  )}</td>
+  <td style="padding:12px;border-bottom:1px solid #eee;text-align:right;vertical-align:top;font-weight:600;">${euro(
+    rowTotal
+  )}</td>
 </tr>`;
     })
     .join("");
@@ -159,76 +156,118 @@ function buildCustomerEmailHtml(payload: EmailOrderPayload) {
     paymentMethod === "bacs" ? "Банков превод" : "Наложен платеж";
 
   return `
-<div style="font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f7f7f7">
-<div style="max-width:760px;margin:auto;background:#fff;border-radius:16px;padding:28px">
+<div style="font-family:Arial,Helvetica,sans-serif;padding:24px;background:#f7f7f7;color:#111;">
+  <div style="max-width:760px;margin:auto;background:#fff;border-radius:16px;padding:28px;border:1px solid #e9e9e9;">
+    <h1 style="margin-top:0">Благодарим за поръчката!</h1>
 
-<h1 style="margin-top:0">Благодарим за поръчката!</h1>
+    <p style="margin:0 0 18px 0;">Номер на поръчка: <b>#${orderId}</b></p>
 
-<p>Номер на поръчка: <b>#${orderId}</b></p>
+    <h3 style="margin:0 0 12px 0;">Данни за клиента</h3>
 
-<h3>Данни за клиента</h3>
-
-<p>
-<b>Име:</b> ${escapeHtml(customer.first_name)} ${escapeHtml(
+    <p style="line-height:1.7;margin:0 0 18px 0;">
+      <b>Име:</b> ${escapeHtml(customer.first_name)} ${escapeHtml(
     customer.last_name
   )}<br>
-<b>Телефон:</b> ${escapeHtml(customer.phone)}<br>
-${customer.email ? `<b>Email:</b> ${escapeHtml(customer.email)}<br>` : ""}
-<b>Град:</b> ${escapeHtml(customer.city)}<br>
-<b>Доставка:</b> ${escapeHtml(deliveryText)}<br>
-<b>Плащане:</b> ${escapeHtml(paymentText)}
-</p>
+      <b>Телефон:</b> ${escapeHtml(customer.phone)}<br>
+      ${customer.email ? `<b>Email:</b> ${escapeHtml(customer.email)}<br>` : ""}
+      <b>Град:</b> ${escapeHtml(customer.city)}<br>
+      <b>Доставка:</b> ${escapeHtml(deliveryText)}<br>
+      <b>Плащане:</b> ${escapeHtml(paymentText)}
+      ${
+        customer.notes?.trim()
+          ? `<br><b>Бележка:</b> ${escapeHtml(customer.notes.trim())}`
+          : ""
+      }
+    </p>
 
-<h3>Поръчани продукти</h3>
+    ${
+      paymentMethod === "bacs"
+        ? `
+    <div style="margin:22px 0;padding:18px;border-radius:14px;background:#fafafa;border:1px solid #e9e9e9;">
+      <h3 style="margin:0 0 10px;">Данни за банков превод</h3>
+      <div style="font-size:14px;line-height:1.8;color:#333;">
+        <div><b>Получател:</b> Оптика Естетика ЕООД</div>
+        <div><b>IBAN:</b> BG57BPBI79211046639401</div>
+        <div><b>BIC:</b> BPBIBGSF</div>
+        <div><b>Банка:</b> Юробанк България АД</div>
+        <div><b>Основание:</b> Поръчка #${orderId}</div>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;line-height:1.7;color:#666;">
+        Поръчката ще бъде обработена след постъпване на плащането.
+      </p>
+    </div>
+    `
+        : ""
+    }
 
-<table style="width:100%;border-collapse:collapse">
-<thead>
-<tr style="background:#fafafa">
-<th style="padding:10px;text-align:left">Продукт</th>
-<th style="padding:10px;text-align:center">Бр.</th>
-<th style="padding:10px;text-align:right">Цена</th>
-<th style="padding:10px;text-align:right">Общо</th>
-</tr>
-</thead>
+    <h3 style="margin:22px 0 12px 0;">Поръчани продукти</h3>
 
-<tbody>
-${buildItemsHtml(items)}
-</tbody>
-</table>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:#fafafa">
+          <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">Продукт</th>
+          <th style="padding:10px;text-align:center;border-bottom:1px solid #eee;">Бр.</th>
+          <th style="padding:10px;text-align:right;border-bottom:1px solid #eee;">Цена</th>
+          <th style="padding:10px;text-align:right;border-bottom:1px solid #eee;">Общо</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${buildItemsHtml(items)}
+      </tbody>
+    </table>
 
-<div style="margin-top:20px;text-align:right;font-size:20px;font-weight:700">
-Обща сума: ${euro(total)}
-</div>
-
-</div>
+    <div style="margin-top:20px;text-align:right;font-size:20px;font-weight:700;">
+      Обща сума: ${euro(total)}
+    </div>
+  </div>
 </div>`;
 }
 
 function buildShopEmailHtml(payload: EmailOrderPayload) {
-  const { orderId, customer, paymentMethod } = payload;
+  const {
+    orderId,
+    customer,
+    paymentMethod,
+    items,
+    deliveryMethod,
+    deliveryOffice,
+  } = payload;
+
+  const { total } = buildTotals(items);
 
   const paymentText =
     paymentMethod === "bacs" ? "Банков превод" : "Наложен платеж";
 
+  const deliveryText = buildDeliveryText(
+    deliveryMethod,
+    deliveryOffice,
+    customer.address_1,
+    customer.city
+  );
+
   return `
-<div style="font-family:Arial">
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.7;color:#111;">
+  <h2>Нова поръчка #${orderId}</h2>
 
-<h2>Нова поръчка #${orderId}</h2>
-
-<p>
-<b>Клиент:</b> ${escapeHtml(customer.first_name)} ${escapeHtml(
+  <p><b>Клиент:</b> ${escapeHtml(customer.first_name)} ${escapeHtml(
     customer.last_name
-  )}
-</p>
+  )}</p>
 
-<p><b>Телефон:</b> ${escapeHtml(customer.phone)}</p>
+  <p><b>Телефон:</b> ${escapeHtml(customer.phone)}</p>
 
-${customer.email ? `<p><b>Email:</b> ${escapeHtml(customer.email)}</p>` : ""}
+  ${customer.email ? `<p><b>Email:</b> ${escapeHtml(customer.email)}</p>` : ""}
 
-<p><b>Плащане:</b> ${paymentText}</p>
+  <p><b>Град:</b> ${escapeHtml(customer.city)}</p>
+  <p><b>Доставка:</b> ${escapeHtml(deliveryText)}</p>
+  <p><b>Плащане:</b> ${escapeHtml(paymentText)}</p>
+  ${
+    customer.notes?.trim()
+      ? `<p><b>Бележка:</b> ${escapeHtml(customer.notes.trim())}</p>`
+      : ""
+  }
+  <p><b>Обща сума:</b> ${euro(total)}</p>
 
-<p>Провери поръчката в WooCommerce.</p>
-
+  <p>Провери поръчката в WooCommerce за пълните детайли.</p>
 </div>`;
 }
 
