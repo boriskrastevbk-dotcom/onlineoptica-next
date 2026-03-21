@@ -1,0 +1,998 @@
+@import "tailwindcss";
+
+/* =========================
+   Base
+========================= */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --accent: #a855f7;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f5f7fa;
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================
+   Layout
+========================= */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 0px 20px;
+}
+
+.section-intro {
+  text-align: center;
+  margin: 60px 0 24px;
+}
+
+.section-title {
+  font-size: clamp(24px, 2.6vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+
+.section-sub {
+  color: rgba(0,0,0,0.55);
+  font-size: 15px;
+  margin: 0;
+}
+
+/* =========================
+   Product grid + cards
+========================= */
+.products-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.card{
+  background:#f6f5f3;
+  border-radius:14px;
+  overflow:hidden;          /* важно */
+  padding:0;
+}
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 38px rgba(0,0,0,0.12);
+  }
+}
+
+/* Image wrapper */
+.pmedia{
+  position: relative;
+  overflow: hidden;
+  background: #f6f5f3;
+  margin: 0;
+  padding: 14px 14px 26px;
+  height: 170px;          /* фиксирана височина */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Next/Image и normal img */
+.pmedia img {
+  max-width: 100%;
+  max-height: 110px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .pmedia img {
+    max-height: 140px;
+  }
+}
+
+
+
+/* Price badge */
+.pprice {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  z-index: 3;
+  max-width: calc(100% - 20px);
+  white-space: nowrap;
+}
+
+/* Old price */
+.pprice-strike {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  line-height: 1;
+  text-decoration: line-through;
+  z-index: 3;
+  max-width: calc(100% - 20px);
+  white-space: nowrap;
+}
+
+/* Promo badge */
+.promo-badge {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 3;
+  line-height: 1;
+}
+
+
+/* Product name */
+.pname{
+  margin-top:0;
+  background:transparent;
+  padding:12px 14px;
+  border-top:none;   /* маха лентата */
+}
+
+/* =========================
+   Mobile fix for prices
+========================= */
+@media (max-width: 640px) {
+
+  .pmedia {
+    padding: 12px 12px 44px; /* повече място за цените */
+  }
+
+  .pprice {
+    right: 8px;
+    bottom: 8px;
+    font-size: 12px;
+    padding: 5px 10px;
+    max-width: 75%;
+  }
+
+  .pprice-strike {
+    left: 8px;
+    bottom: 32px; /* качваме старата цена нагоре */
+    font-size: 10px;
+    padding: 3px 8px;
+    max-width: 55%;
+  }
+
+  .promo-badge {
+    top: 8px;
+    left: 8px;
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+
+/* =========================
+   Header (mobile-first)
+========================= */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  color: #fff;
+  background: radial-gradient(1200px 200px at 20% 0%, rgba(168, 85, 247, 0.14), transparent 55%),
+    linear-gradient(180deg, #111827 0%, #0b1220 100%);
+  border-bottom: 1px solid #1f2937;
+}
+
+.site-header::after {
+  content: "";
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0), var(--accent), rgba(168, 85, 247, 0));
+  opacity: 0.9;
+}
+
+.site-header a {
+  color: #e5e7eb;
+  text-decoration: none;
+}
+.site-header a:hover {
+  color: #fff;
+}
+
+.site-header input::placeholder {
+  color: rgba(229, 231, 235, 0.65);
+}
+
+/* Mobile layout:
+   row1: brand | actions
+   row2: search full width
+*/
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 12px;
+
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "brand actions"
+    "search search";
+  align-items: center;
+  gap: 10px;
+}
+
+.brand {
+  grid-area: brand;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-search {
+  grid-area: search;
+  display: flex;
+}
+
+.header-search input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  outline: none;
+}
+
+/* Desktop nav hidden on mobile */
+.header-nav {
+  display: none;
+}
+
+/* Icon buttons (hamburger etc.) */
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #e5e7eb;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.7);
+  outline-offset: 2px;
+}
+
+/* Desktop layout: 1 row
+   brand | nav | search | actions
+*/
+@media (min-width: 900px) {
+  .header-inner {
+    grid-template-columns: auto 1fr auto auto; /* nav е 1fr */
+    grid-template-areas: "brand nav search actions";
+    gap: 18px;
+    padding: 12px 16px;
+  }
+
+  .header-nav {
+    display: block;
+    grid-area: nav;
+    justify-self: start;
+  }
+
+  .header-search {
+    grid-area: search;
+    justify-self: end;
+  }
+
+  .header-actions {
+    grid-area: actions;
+    justify-self: end;
+  }
+
+  .header-search input {
+    max-width: 260px;
+    border-radius: 999px;
+    padding: 10px 16px;
+  }
+
+  .menu-btn {
+    display: none;
+  }
+}
+
+
+
+/* =========================
+   HERO
+========================= */
+.hero {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-img {
+  width: 100%;
+  height: clamp(220px, 36vw, 380px);
+  object-fit: cover;
+  display: block;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: flex-end;      /* вместо center */
+  justify-content: center;
+
+  padding-bottom: 60px;       /* добавя тежест надолу */
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.15) 0%,
+      rgba(0,0,0,0.45) 55%,
+      rgba(0,0,0,0.65) 100%
+    );
+}
+
+.hero-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: #fff;
+}
+.hero-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+ white-space: nowrap;
+  font-size: clamp(22px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  line-height: 1.1;
+}
+
+.hero-price-highlight{
+  color: #22d3ee; /* цвета на логото */
+  font-weight: 900;
+  font-size: 1.15em;  /* леко по-голямо */
+  letter-spacing: -0.01em;
+}
+
+.hero-sub {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.hero-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 520px;
+}
+@media (min-width: 900px) {
+  .hero-overlay {
+    justify-content: flex-start;
+  }
+
+  .hero-inner {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0;           /* <-- важно: маха центрирането */
+    padding-left: 80px;
+    padding-right: 16px;
+  }
+}
+@media (max-width: 899px) {
+  .hero-overlay {
+    padding-bottom: 36px; /* вместо 60 */
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-title {
+    white-space: nowrap;      /* държи “Диоптрични рамки от €20” на 1 ред */
+    align-items: baseline;    /* да стои по-естествено с текста */
+  }
+}
+
+/* =========================
+   Category cards
+========================= */
+.catcards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 30px 0;
+}
+
+.catcard::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.75) 0%,
+    rgba(0,0,0,0.45) 35%,
+    rgba(0,0,0,0.15) 70%,
+    rgba(0,0,0,0.0) 100%
+  );
+  z-index: 1;
+}
+
+@media (min-width: 900px) {
+  .catcards {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.catcard {
+  position: relative;
+  aspect-ratio: 3/4;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 14px 32px rgba(0,0,0,0.14);
+ transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.catcard-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1);
+  transition: transform .35s ease;
+}
+
+.catcard-title {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+
+  text-align: center;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.75);
+}
+@media (hover: hover) and (pointer: fine) {
+  .catcard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+  }
+
+  .catcard:hover .catcard-media img {
+    transform: scale(1.06);
+  }
+}
+@media (max-width: 520px) {
+  .catcards {
+    gap: 18px;
+    margin: 24px 0;
+  }
+}
+
+
+/* =========================
+   Product Image Zoom
+========================= */
+
+.product-main-image {
+  position: relative;
+  max-width: 520px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  overflow: hidden;
+  cursor: zoom-in;
+
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.product-main-image img {
+  width: 100%;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+/* Desktop hover zoom */
+@media (hover: hover) and (pointer: fine) {
+  .product-main-image:hover img {
+    transform: scale(1.12);
+  }
+}
+
+
+.product-main-image {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Fullscreen lightbox */
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.image-lightbox img {
+  max-width: 92%;
+  max-height: 92%;
+  object-fit: contain;
+}
+
+.lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  font-size: 40px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.lightbox-arrow.left {
+  left: 20px;
+}
+
+.lightbox-arrow.right {
+  right: 20px;
+}
+
+@media (max-width: 768px) {
+  .lightbox-arrow {
+    font-size: 28px;
+  }
+}
+
+/* =========================
+   Category Header (Compact Premium)
+========================= */
+
+.cat-hero{
+  margin: 6px 0 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
+}
+
+.cat-hero-top{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cat-title{
+  margin: 0;
+  font-size: clamp(22px, 2.2vw, 32px);
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.cat-sort{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.65);
+  white-space: nowrap;
+}
+
+.cat-sort select{
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  font-weight: 600;
+}
+
+/* =========================
+   Filters
+========================= */
+
+.filter-row{
+  margin: 10px 0 0;
+}
+
+.filter-scroll{
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filter-scroll::-webkit-scrollbar{
+  display:none;
+}
+
+.filter-chip{
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.14);
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.85);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: rgba(0,0,0,0.8);
+}
+
+.filter-chip:hover{
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.25);
+}
+
+.filter-chip.active{
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+/* Mobile polish */
+
+@media (max-width: 768px){
+  .cat-hero{
+    padding: 12px 12px;
+  }
+
+  .cat-sort{
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .cat-sort select{
+    width: 60%;
+    max-width: 240px;
+  }
+}
+
+
+/* =========================
+   Footer minimal
+========================= */
+
+.site-footer{
+  margin-top: 28px;
+  padding: 18px 0 22px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  font-size: 13px;
+  opacity: 0.88;
+}
+
+.footer-inner{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footer-links{
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.footer-links a{
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.footer-links a:hover{
+  opacity: 1;
+  text-decoration: underline;
+}
+
+@media (max-width: 640px){
+  .footer-inner{
+    justify-content: flex-start;
+  }
+}
+
+html, body { height: 100%; }
+body { min-height: 100%; display: flex; flex-direction: column; }
+main { flex: 1; }
+
+
+/* =========================
+   Policy pages
+========================= */
+.policy{
+  max-width: 860px;
+}
+
+.policy h1{
+  margin: 6px 0 14px;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.02em;
+}
+
+.policy h2{
+  margin: 22px 0 10px;
+  font-size: 18px;
+}
+
+.policy h3{
+  margin: 16px 0 8px;
+  font-size: 15px;
+}
+
+.policy p, .policy li{
+  line-height: 1.6;
+  color: rgba(0,0,0,0.78);
+}
+
+.policy ul{
+  padding-left: 18px;
+  margin: 10px 0;
+}
+
+.page-header {
+  margin: 32px 0 24px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.contact-company {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.contact-phone {
+  font-weight: 700;
+  font-size:  18px;
+  text-decoration: none;
+}
+
+.contact-phone:hover {
+  text-decoration: underline;
+}
+@media (max-width: 640px) {
+  .page-header {
+    margin: 14px 0 14px;   /* беше 32/24 -> твърде много */
+  }
+
+  .page-header h1 {
+    font-size: 28px;       /* малко по-компактно */
+  }
+
+  .contact-content {
+    max-width: 100%;       /* ключово: да стане full width */
+    font-size: 15px;       /* по-приятно на мобилен */
+  }
+}
+.contact-content {
+  max-width: 520px;
+  line-height: 1.8;
+  font-size: 16px;
+  margin-top: 12px;
+  padding: 0 16px;   /* <-- само тук добавяме въздух */
+}
+@media (max-width: 640px) {
+  .contact-content {
+    max-width: 100%;
+    font-size: 15px;
+  }
+}
+
+.contact-page {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+/* Account dropdown fix */
+
+.account-dropdown a,
+.account-dropdown button {
+  color: #111 !important;
+  font-weight: 500;
+}
+
+.account-dropdown a:hover,
+.account-dropdown button:hover {
+  background: #f5f5f5;
+  color: #000 !important;
+}
+
+
+.cat-seo {
+  margin: 40px 0 20px;
+  padding: 24px;
+  border-radius: 18px;
+  background: #f8f6f3;
+  color: #2b2b2b;
+}
+
+.cat-seo h2 {
+  margin: 0 0 14px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.cat-seo p {
+  margin: 0 0 12px;
+  line-height: 1.7;
+  color: #4b4b4b;
+}
+
+.cat-seo p:last-child {
+  margin-bottom: 0;
+}
+
+
+
+.cart-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.cart-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b84dff, #7c3aed);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.32);
+  border: 2px solid #111;
+}
+
+@media (max-width: 768px) {
+  .cart-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .cart-badge {
+    top: -3px;
+    right: -3px;
+  }
+}
+
+
+/* =========================
+   Promo Bar
+========================= */
+
+.promo-bar {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  padding: 7px 12px;
+  background:
+    radial-gradient(circle at 15% 50%, rgba(34, 211, 238, 0.18), transparent 28%),
+    radial-gradient(circle at 85% 50%, rgba(168, 85, 247, 0.18), transparent 30%),
+    linear-gradient(90deg, #0b0b0f 0%, #111827 45%, #17112b 100%);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+}
+
+.promo-bar strong {
+  color: #22d3ee;
+  font-weight: 900;
+}
+
+.promo-bar:hover {
+  filter: brightness(1.04);
+}
+
+@media (max-width: 768px) {
+  .promo-bar {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pmedia img {
+    max-height: 95px;
+  }
+}
