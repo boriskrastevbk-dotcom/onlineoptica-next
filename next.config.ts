@@ -13,9 +13,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-};
 
-async redirects() {
+  async redirects() {
     return [
       {
         source: "/product-category/:slug",
@@ -25,6 +24,5 @@ async redirects() {
     ];
   },
 };
-
 
 export default nextConfig;
