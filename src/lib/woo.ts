@@ -15,11 +15,12 @@ type WooCategory = {
 
 const categoryIdCache = new Map<string, number | null>();
 
-function wooAuthHeader() {
+function appendWooAuth(url: URL) {
   const ck = process.env.WOO_CONSUMER_KEY!;
   const cs = process.env.WOO_CONSUMER_SECRET!;
-  const token = Buffer.from(`${ck}:${cs}`).toString("base64");
-  return { Authorization: `Basic ${token}` };
+  url.searchParams.set("consumer_key", ck);
+  url.searchParams.set("consumer_secret", cs);
+  return url;
 }
 
 function parseJson<T>(text: string): T {
@@ -47,12 +48,11 @@ async function resolveCategoryIdBySlug(categorySlug: string): Promise<number | n
     return categoryIdCache.get(wanted) ?? null;
   }
 
-  const url = new URL(`${baseUrl}/wp-json/wc/v3/products/categories`);
+  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products/categories`));
   url.searchParams.set("per_page", "100");
   url.searchParams.set("hide_empty", "false");
 
   const res = await fetch(url.toString(), {
-    headers: { ...wooAuthHeader() },
     next: { revalidate: 300 },
   });
 
@@ -79,7 +79,7 @@ async function resolveCategoryIdBySlug(categorySlug: string): Promise<number | n
 export async function ooProductsPaged<T>(
   params: Record<string, string | number | boolean | undefined> = {}
 ): Promise<WooPaged<T>> {
-  const url = new URL(`${baseUrl}/wp-json/wc/v3/products`);
+  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products`));
 
   const categorySlugRaw =
     typeof params.category_slug === "string" ? params.category_slug : undefined;
@@ -94,8 +94,6 @@ export async function ooProductsPaged<T>(
     url.searchParams.set(k, String(v));
   }
 
-  // По подразбиране показваме само налични продукти,
-  // освен ако изрично не е подаден stock_status
   if (!url.searchParams.has("stock_status")) {
     url.searchParams.set("stock_status", "instock");
   }
@@ -117,7 +115,6 @@ export async function ooProductsPaged<T>(
   }
 
   const res = await fetch(url.toString(), {
-    headers: { ...wooAuthHeader() },
     next: { revalidate: 300 },
   });
 
@@ -139,10 +136,9 @@ export async function ooProductsPaged<T>(
 }
 
 export async function wooGetProductById<T>(id: number): Promise<T> {
-  const url = new URL(`${baseUrl}/wp-json/wc/v3/products/${id}`);
+  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products/${id}`));
 
   const res = await fetch(url.toString(), {
-    headers: { ...wooAuthHeader() },
     next: { revalidate: 300 },
   });
 
@@ -160,21 +156,18 @@ export async function wooGetProductById<T>(id: number): Promise<T> {
 export async function wooGetProducts<T>(
   params: Record<string, string | number | boolean | undefined> = {}
 ): Promise<T> {
-  const url = new URL(`${baseUrl}/wp-json/wc/v3/products`);
+  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products`));
 
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined) continue;
     url.searchParams.set(k, String(v));
   }
 
-  // По подразбиране показваме само налични продукти,
-  // освен ако изрично не е подаден stock_status
   if (!url.searchParams.has("stock_status")) {
     url.searchParams.set("stock_status", "instock");
   }
 
   const res = await fetch(url.toString(), {
-    headers: { ...wooAuthHeader() },
     next: { revalidate: 300 },
   });
 
@@ -190,7 +183,7 @@ export async function wooGetProducts<T>(
 export async function wooGetCategories<T>(
   params: Record<string, string | number | boolean | undefined> = {}
 ): Promise<T> {
-  const url = new URL(`${baseUrl}/wp-json/wc/v3/products/categories`);
+  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products/categories`));
 
   for (const [k, v] of Object.entries(params)) {
     if (v === undefined) continue;
@@ -198,7 +191,6 @@ export async function wooGetCategories<T>(
   }
 
   const res = await fetch(url.toString(), {
-    headers: { ...wooAuthHeader() },
     next: { revalidate: 300 },
   });
 
