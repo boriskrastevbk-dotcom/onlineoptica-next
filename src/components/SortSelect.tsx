@@ -22,8 +22,8 @@ export default function SortSelect({
         params.set("sort", nextSort);
         params.set("page", "1");
 
-        router.push(`${baseUrl}?${params.toString()}`);
-        // router.refresh(); // Можете да коментирате или премахнете това
+        const hasQuery = baseUrl.includes("?");
+        router.push(`${baseUrl}${hasQuery ? "&" : "?"}${params.toString()}`);
       }}
       style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #d9d9d9" }}
     >

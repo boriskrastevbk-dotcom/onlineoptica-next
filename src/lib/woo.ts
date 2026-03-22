@@ -1,3 +1,5 @@
+import { WOO_CATEGORY_ID_BY_SLUG } from "@/lib/woo-category-map";
+
 const baseUrl = process.env.WOO_BASE_URL!;
 
 export type WooPaged<T> = {
@@ -12,8 +14,6 @@ type WooCategory = {
   slug: string;
   parent?: number;
 };
-
-const categoryIdCache = new Map<string, number | null>();
 
 function appendWooAuth(url: URL) {
   const ck = process.env.WOO_CONSUMER_KEY!;
@@ -34,46 +34,67 @@ function normalizeSlug(s: string) {
     out = decodeURIComponent(s);
   } catch {}
 
-  return out
-    .trim()
-    .toLowerCase()
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ");
+  return out.trim().toLowerCase();
 }
 
-async function resolveCategoryIdBySlug(categorySlug: string): Promise<number | null> {
-  const wanted = normalizeSlug(categorySlug);
+function applySort(url: URL, sort: string) {
+  switch (sort) {
+    case "new":
+      url.searchParams.set("orderby", "date");
+      url.searchParams.set("order", "desc");
+      break;
 
-  if (categoryIdCache.has(wanted)) {
-    return categoryIdCache.get(wanted) ?? null;
+    case "old":
+      url.searchParams.set("orderby", "date");
+      url.searchParams.set("order", "asc");
+      break;
+
+    case "price_asc":
+      url.searchParams.set("orderby", "price");
+      url.searchParams.set("order", "asc");
+      break;
+
+    case "price_desc":
+      url.searchParams.set("orderby", "price");
+      url.searchParams.set("order", "desc");
+      break;
+
+    case "name_asc":
+      url.searchParams.set("orderby", "title");
+      url.searchParams.set("order", "asc");
+      break;
+
+    case "name_desc":
+      url.searchParams.set("orderby", "title");
+      url.searchParams.set("order", "desc");
+      break;
+
+    default:
+      url.searchParams.set("orderby", "date");
+      url.searchParams.set("order", "desc");
+      break;
   }
+}
 
-  const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products/categories`));
-  url.searchParams.set("per_page", "100");
-  url.searchParams.set("hide_empty", "false");
+async function fetchTextWithTiming(url: string, label: string, revalidate = 300) {
+  const started = Date.now();
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 300 },
+  const res = await fetch(url, {
+    next: { revalidate },
   });
 
   const text = await res.text();
+  const ms = Date.now() - started;
 
-  if (!res.ok) {
-    throw new Error(
-      `Woo GET /products/categories failed: ${res.status} ${res.statusText} ${text}`
-    );
-  }
+  console.log(`[woo] ${label} ${res.status} in ${ms}ms`);
+  console.log(`[woo] URL: ${url}`);
 
-  const categories = parseJson<WooCategory[]>(text);
+  return { res, text, ms };
+}
 
-  const found =
-    categories.find((c) => normalizeSlug(c.slug) === wanted) ||
-    categories.find((c) => normalizeSlug(c.name) === wanted);
-
-  const id = found?.id ?? null;
-  categoryIdCache.set(wanted, id);
-
-  return id;
+function resolveCategoryIdBySlugLocal(categorySlug: string): number | null {
+  const wanted = normalizeSlug(categorySlug);
+  return WOO_CATEGORY_ID_BY_SLUG[wanted] ?? null;
 }
 
 export async function ooProductsPaged<T>(
@@ -98,12 +119,13 @@ export async function ooProductsPaged<T>(
     url.searchParams.set("stock_status", "instock");
   }
 
-  url.searchParams.set("oo_sort", sort);
+  applySort(url, sort);
 
   if (categorySlugRaw) {
-    const categoryId = await resolveCategoryIdBySlug(categorySlugRaw);
+    const categoryId = resolveCategoryIdBySlugLocal(categorySlugRaw);
 
     if (!categoryId) {
+      console.log(`[woo] category not found in local map for slug: ${categorySlugRaw}`);
       return {
         data: [] as T,
         total: 0,
@@ -114,11 +136,10 @@ export async function ooProductsPaged<T>(
     url.searchParams.set("category", String(categoryId));
   }
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 300 },
-  });
-
-  const text = await res.text();
+  const { res, text } = await fetchTextWithTiming(
+    url.toString(),
+    `products sort=${sort}${categorySlugRaw ? ` category_slug=${categorySlugRaw}` : ""}`
+  );
 
   if (!res.ok) {
     throw new Error(`Woo GET /products failed: ${res.status} ${res.statusText} ${text}`);
@@ -138,11 +159,7 @@ export async function ooProductsPaged<T>(
 export async function wooGetProductById<T>(id: number): Promise<T> {
   const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/products/${id}`));
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 300 },
-  });
-
-  const text = await res.text();
+  const { res, text } = await fetchTextWithTiming(url.toString(), `product id=${id}`);
 
   if (!res.ok) {
     throw new Error(
@@ -167,11 +184,7 @@ export async function wooGetProducts<T>(
     url.searchParams.set("stock_status", "instock");
   }
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 300 },
-  });
-
-  const text = await res.text();
+  const { res, text } = await fetchTextWithTiming(url.toString(), "products raw");
 
   if (!res.ok) {
     throw new Error(`Woo GET /products failed: ${res.status} ${res.statusText} ${text}`);
@@ -190,11 +203,7 @@ export async function wooGetCategories<T>(
     url.searchParams.set(k, String(v));
   }
 
-  const res = await fetch(url.toString(), {
-    next: { revalidate: 300 },
-  });
-
-  const text = await res.text();
+  const { res, text } = await fetchTextWithTiming(url.toString(), "categories raw");
 
   if (!res.ok) {
     throw new Error(
