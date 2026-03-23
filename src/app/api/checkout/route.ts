@@ -43,7 +43,7 @@ type CheckoutBody = {
   }[];
 };
 
-function wooAuthHeader() {
+function appendWooAuth(url: URL) {
   const ck = process.env.WOO_CONSUMER_KEY;
   const cs = process.env.WOO_CONSUMER_SECRET;
 
@@ -51,8 +51,9 @@ function wooAuthHeader() {
     throw new Error("Missing WOO_CONSUMER_KEY or WOO_CONSUMER_SECRET");
   }
 
-  const token = Buffer.from(`${ck}:${cs}`).toString("base64");
-  return { Authorization: `Basic ${token}` };
+  url.searchParams.set("consumer_key", ck);
+  url.searchParams.set("consumer_secret", cs);
+  return url;
 }
 
 function asMoney(v: unknown) {
@@ -202,13 +203,12 @@ export async function POST(req: Request) {
       line_items,
     };
 
-    const url = `${baseUrl}/wp-json/wc/v3/orders`;
+    const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/orders`));
 
-    const res = await fetch(url, {
+    const res = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...wooAuthHeader(),
       },
       body: JSON.stringify(orderPayload),
       cache: "no-store",
@@ -250,7 +250,6 @@ export async function POST(req: Request) {
       );
 
       emailSent = true;
-      console.log(`Order email sent for #${json.id}`);
     } catch (e: any) {
       emailError = e?.message || String(e);
       console.error("Order created, but custom email failed:", e);
