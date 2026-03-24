@@ -5,7 +5,6 @@ export const runtime = "nodejs";
 
 const baseUrl = process.env.WOO_BASE_URL!;
 
-
 export async function GET() {
   try {
     const token = await getOoToken();
@@ -20,6 +19,7 @@ export async function GET() {
     const wpRes = await fetch(`${baseUrl}/wp-json/onlineoptica/v1/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
+        Cookie: `oo_sess=${encodeURIComponent(token)}`,
       },
       cache: "no-store",
     });
@@ -28,8 +28,7 @@ export async function GET() {
 
     let data: any = {};
     try {
-     
-data = JSON.parse(text);
+      data = JSON.parse(text);
     } catch {
       data = { ok: false, error: "invalid_wp_response", raw: text };
     }

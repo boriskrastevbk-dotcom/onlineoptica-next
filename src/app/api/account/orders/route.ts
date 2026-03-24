@@ -5,7 +5,6 @@ export const runtime = "nodejs";
 
 const baseUrl = process.env.WOO_BASE_URL!;
 
-
 export async function GET(req: Request) {
   try {
     const token = await getOoToken();
@@ -24,6 +23,7 @@ export async function GET(req: Request) {
     const wpRes = await fetch(wpUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
+        Cookie: `oo_sess=${encodeURIComponent(token)}`,
       },
       cache: "no-store",
     });
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
     let data: any = {};
     try {
-data = JSON.parse(text);     
+      data = JSON.parse(text);
     } catch {
       data = { ok: false, error: "invalid_wp_response", raw: text };
     }

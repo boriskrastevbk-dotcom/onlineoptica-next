@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        Cookie: `oo_sess=${encodeURIComponent(token)}`,
       },
       body: JSON.stringify(body),
       cache: "no-store",
