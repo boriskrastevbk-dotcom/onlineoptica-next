@@ -23,6 +23,13 @@ export default function ProductImageZoom({
     setIndex(initialIndex);
   }, [initialIndex]);
 
+  useEffect(() => {
+    images.slice(0, 3).forEach((image) => {
+      const img = new window.Image();
+      img.src = image.src;
+    });
+  }, [images]);
+
   const prev = () =>
     setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
 
@@ -73,7 +80,7 @@ export default function ProductImageZoom({
                 <img
                   src={image.src}
                   alt={image.alt || ""}
-                  className="aspect-square h-full w-full object-contain"
+                  className="aspect-square h-full w-full object-contain p-1"
                 />
               </button>
             );
