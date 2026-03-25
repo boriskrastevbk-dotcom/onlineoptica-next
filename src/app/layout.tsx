@@ -2,19 +2,26 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
+import { getOoToken } from "@/lib/ooSession";
 
 export const metadata: Metadata = {
   title: "Onlineoptica",
   description: "Onlineoptica – онлайн магазин за очила и рамки",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const token = await getOoToken();
+  const initialLoggedIn = !!token;
+
   return (
     <html lang="bg">
       <body>
         <CartProvider>
-          
-<Header />
+          <Header initialLoggedIn={initialLoggedIn} />
 
           <main>{children}</main>
 
@@ -30,7 +37,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </nav>
             </div>
           </footer>
-
         </CartProvider>
       </body>
     </html>

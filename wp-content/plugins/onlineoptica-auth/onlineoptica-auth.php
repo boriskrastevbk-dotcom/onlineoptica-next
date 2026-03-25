@@ -137,9 +137,9 @@ class OO_Auth_API {
     $postcode   = isset($body['postcode']) ? sanitize_text_field((string)$body['postcode']) : '';
 
     wp_update_user([
-      'ID'         => $user->ID,
-      'first_name' => $first_name,
-      'last_name'  => $last_name,
+      'ID'           => $user->ID,
+      'first_name'   => $first_name,
+      'last_name'    => $last_name,
       'display_name' => trim($first_name . ' ' . $last_name) ?: $user->display_name,
     ]);
 
@@ -315,10 +315,15 @@ class OO_Auth_API {
     $last_name = get_user_meta($user->ID, 'billing_last_name', true);
     if ($last_name === '') $last_name = get_user_meta($user->ID, 'last_name', true);
 
+    $pretty_name = trim($first_name . ' ' . $last_name);
+    if ($pretty_name === '') {
+      $pretty_name = $user->display_name ?: $user->user_login;
+    }
+
     return [
       'id'         => (int)$user->ID,
       'email'      => $user->user_email,
-      'name'       => $user->display_name,
+      'name'       => (string)$pretty_name,
       'first_name' => (string)$first_name,
       'last_name'  => (string)$last_name,
       'phone'      => (string)get_user_meta($user->ID, 'billing_phone', true),

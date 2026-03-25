@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+const STORAGE_KEY = "oo_header_user";
+
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -36,6 +38,13 @@ export default function LoginClient() {
         setLoading(false);
         return;
       }
+
+      try {
+        if (data?.user) {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+	  window.dispatchEvent(new Event("oo-auth-changed"));
+        }
+      } catch {}
 
       router.push(nextUrl);
       router.refresh();

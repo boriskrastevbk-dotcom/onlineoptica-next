@@ -7,7 +7,11 @@ import { useState } from "react";
 import Image from "next/image";
 import PromoBar from "@/components/PromoBar";
 
-export default function Header() {
+export default function Header({
+  initialLoggedIn = false,
+}: {
+  initialLoggedIn?: boolean;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -16,7 +20,12 @@ export default function Header() {
 
       <header className="site-header">
         <div className="header-inner">
-          <Link href="/" className="brand" onClick={() => setOpen(false)} aria-label="Onlineoptica">
+          <Link
+            href="/"
+            className="brand"
+            onClick={() => setOpen(false)}
+            aria-label="Onlineoptica"
+          >
             <Image
               src="/logo.svg"
               alt="Onlineoptica"
@@ -28,7 +37,11 @@ export default function Header() {
           </Link>
 
           <div className="header-nav">
-            <NavMenu onNavigate={() => setOpen(false)} variant="desktop" />
+            <NavMenu
+              onNavigate={() => setOpen(false)}
+              variant="desktop"
+              initialLoggedIn={initialLoggedIn}
+            />
           </div>
 
           <form
@@ -64,7 +77,11 @@ export default function Header() {
         {open && (
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}>
             <div style={{ maxWidth: 1200, margin: "0 auto", padding: "10px 14px" }}>
-              <NavMenu onNavigate={() => setOpen(false)} variant="mobile" />
+              <NavMenu
+                onNavigate={() => setOpen(false)}
+                variant="mobile"
+                initialLoggedIn={initialLoggedIn}
+              />
             </div>
           </div>
         )}

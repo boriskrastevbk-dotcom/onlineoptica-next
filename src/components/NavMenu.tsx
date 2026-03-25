@@ -4,9 +4,11 @@ import HeaderAccount from "@/components/HeaderAccount";
 export default function NavMenu({
   variant = "desktop",
   onNavigate,
+  initialLoggedIn = false,
 }: {
   variant?: "desktop" | "mobile";
   onNavigate?: () => void;
+  initialLoggedIn?: boolean;
 }) {
   const isMobile = variant === "mobile";
 
@@ -34,17 +36,7 @@ export default function NavMenu({
         Слънчеви очила
       </Link>
 
-      {isMobile ? (
-        <Link
-          className="nav-link"
-          href="/account"
-          onClick={onNavigate}
-        >
-          Моят профил
-        </Link>
-      ) : (
-        <HeaderAccount />
-      )}
+      <HeaderAccount initialLoggedIn={initialLoggedIn} />
 
       <Link
         className="nav-link"

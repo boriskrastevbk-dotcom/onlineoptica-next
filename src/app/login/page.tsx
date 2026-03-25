@@ -1,9 +1,17 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { getOoToken } from "@/lib/ooSession";
 import LoginClient from "./LoginClient";
 
 export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const token = await getOoToken();
+
+  if (token) {
+    redirect("/account");
+  }
+
   return (
     <Suspense
       fallback={
