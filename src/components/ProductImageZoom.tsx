@@ -52,6 +52,35 @@ export default function ProductImageZoom({
         <img src={images[index].src} alt={images[index].alt || ""} />
       </div>
 
+      {images.length > 1 && (
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
+          {images.map((image, i) => {
+            const active = i === index;
+
+            return (
+              <button
+                key={`${image.src}-${i}`}
+                type="button"
+                onClick={() => setIndex(i)}
+                className={`overflow-hidden rounded-lg border bg-white ${
+                  active
+                    ? "border-black ring-1 ring-black"
+                    : "border-black/10 hover:border-black/30"
+                }`}
+                aria-label={`Изображение ${i + 1}`}
+                aria-pressed={active}
+              >
+                <img
+                  src={image.src}
+                  alt={image.alt || ""}
+                  className="aspect-square h-full w-full object-contain"
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {open && (
         <div
           className="image-lightbox"
