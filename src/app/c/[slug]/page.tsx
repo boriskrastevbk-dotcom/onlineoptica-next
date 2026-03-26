@@ -159,7 +159,7 @@ export default async function CategoryPage(props: {
   const activeSlug = sub ? encodeURIComponent(sub) : apiSlug;
 
   const { data: products, totalPages } = await ooProductsPaged<WooProduct[]>({
-    per_page: 24,
+    per_page: 16,
     page,
     category_slug: activeSlug,
     sort,
