@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import Header from "@/components/Header";
 import { getOoToken } from "@/lib/ooSession";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Onlineoptica",
@@ -38,6 +39,7 @@ export default async function RootLayout({
             </div>
           </footer>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
