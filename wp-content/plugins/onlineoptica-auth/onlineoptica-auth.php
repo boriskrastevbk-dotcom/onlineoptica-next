@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OnlineOptica Auth API
  * Description: Minimal auth endpoints for headless Next.js (HttpOnly cookie sessions).
- * Version: 0.1.0
+ * Version: 0.1.1
  */
 
 if (!defined('ABSPATH')) exit;
@@ -109,8 +109,16 @@ class OO_Auth_API {
   }
 
   public static function logout(WP_REST_Request $req) {
+    $user = self::require_user($req);
+    if ($user && !is_wp_error($user)) {
+      delete_user_meta($user->ID, 'oo_sess_hash');
+      delete_user_meta($user->ID, 'oo_sess_key');
+      delete_user_meta($user->ID, 'oo_sess_exp');
+    }
+
     self::clear_cookie();
     wp_logout();
+
     return new WP_REST_Response(['ok' => true], 200);
   }
 
@@ -367,30 +375,57 @@ class OO_Auth_API {
 
   private static function issue_token($user_id) {
     $token = wp_generate_password(48, false, false);
-    $hash = wp_hash_password($token);
+    $hash  = wp_hash_password($token);
+    $key   = hash('sha256', $token);
 
     update_user_meta($user_id, 'oo_sess_hash', $hash);
+    update_user_meta($user_id, 'oo_sess_key', $key);
     update_user_meta($user_id, 'oo_sess_exp', time() + self::TOKEN_TTL);
 
     return $token;
   }
 
   private static function validate_token($token) {
-    $key = 'oo_sess_' . hash('sha256', $token);
-    $uid = get_transient($key);
+    $key = hash('sha256', $token);
+    $transient_key = 'oo_sess_' . $key;
+
+    $uid = get_transient($transient_key);
 
     if ($uid) {
-      $uid = (int)$uid;
-      $exp = (int)get_user_meta($uid, 'oo_sess_exp', true);
+      $uid  = (int)$uid;
+      $exp  = (int)get_user_meta($uid, 'oo_sess_exp', true);
       $hash = (string)get_user_meta($uid, 'oo_sess_hash', true);
 
       if ($exp > time() && $hash && wp_check_password($token, $hash, $uid)) {
         return $uid;
       }
 
-      delete_transient($key);
+      delete_transient($transient_key);
+    }
+
+    $users = get_users([
+      'meta_key'    => 'oo_sess_key',
+      'meta_value'  => $key,
+      'number'      => 1,
+      'count_total' => false,
+      'fields'      => 'all',
+    ]);
+
+    if (empty($users) || !($users[0] instanceof WP_User)) {
       return 0;
     }
+
+    $uid  = (int)$users[0]->ID;
+    $exp  = (int)get_user_meta($uid, 'oo_sess_exp', true);
+    $hash = (string)get_user_meta($uid, 'oo_sess_hash', true);
+
+    if ($exp > time() && $hash && wp_check_password($token, $hash, $uid)) {
+      set_transient($transient_key, $uid, self::TOKEN_TTL);
+      return $uid;
+    }
+
+    delete_user_meta($uid, 'oo_sess_key');
+    delete_transient($transient_key);
 
     return 0;
   }

@@ -32,6 +32,22 @@ type CustomerForm = {
 type DeliveryMethod = "speedy_office" | "address";
 type PaymentMethod = "cod" | "bacs";
 
+type SpeedySite = {
+  id: number;
+  name: string;
+  postCode?: string;
+};
+
+type SpeedyOffice = {
+  id: number;
+  name: string;
+  address?: {
+    fullAddressString?: string;
+    siteAddressString?: string;
+    localAddressString?: string;
+  };
+};
+
 export default function CheckoutPage() {
   const cart = useCart();
   const router = useRouter();
@@ -44,7 +60,6 @@ export default function CheckoutPage() {
     useState<DeliveryMethod>("speedy_office");
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("cod");
-  const [speedyOffice, setSpeedyOffice] = useState("");
 
   const [customer, setCustomer] = useState<CustomerForm>({
     first_name: "",
@@ -56,6 +71,14 @@ export default function CheckoutPage() {
     postcode: "",
     notes: "",
   });
+
+  const [siteQuery, setSiteQuery] = useState("");
+  const [siteResults, setSiteResults] = useState<SpeedySite[]>([]);
+  const [selectedSite, setSelectedSite] = useState<SpeedySite | null>(null);
+
+  const [officeResults, setOfficeResults] = useState<SpeedyOffice[]>([]);
+  const [selectedOfficeId, setSelectedOfficeId] = useState("");
+  const [selectedOfficeName, setSelectedOfficeName] = useState("");
 
   useEffect(() => {
     fetch("/api/account/me", {
@@ -78,12 +101,69 @@ export default function CheckoutPage() {
           address_1: u.address_1 || "",
           postcode: u.postcode || "",
         }));
+
+        if (u.city) {
+          setSiteQuery(u.city);
+        }
       })
       .catch(() => {})
       .finally(() => {
         setLoadingProfile(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (deliveryMethod !== "speedy_office") return;
+
+    const q = siteQuery.trim();
+    if (q.length < 2) {
+      setSiteResults([]);
+      return;
+    }
+
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/speedy/sites?query=${encodeURIComponent(q)}`, {
+          cache: "no-store",
+        });
+        const json = await res.json();
+        setSiteResults(Array.isArray(json?.sites) ? json.sites : []);
+      } catch {
+        setSiteResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(t);
+  }, [siteQuery, deliveryMethod]);
+
+
+
+useEffect(() => {
+  const siteId = selectedSite?.id;
+
+  if (!siteId) {
+    setOfficeResults([]);
+    return;
+  }
+
+  async function loadOffices() {
+    try {
+      const res = await fetch(
+        `/api/speedy/offices?siteId=${encodeURIComponent(String(siteId))}`,
+        { cache: "no-store" }
+      );
+      const json = await res.json();
+      setOfficeResults(Array.isArray(json?.offices) ? json.offices : []);
+    } catch {
+      setOfficeResults([]);
+    }
+  }
+
+  loadOffices();
+}, [selectedSite]);
+
+
+
 
   const itemCount = useMemo(
     () => cart.items.reduce((sum, x) => sum + x.qty, 0),
@@ -94,9 +174,16 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (cart.items.length === 0) return;
 
-    if (deliveryMethod === "speedy_office" && !speedyOffice.trim()) {
-      setMsg("Моля, въведете офис на Спиди.");
-      return;
+    if (deliveryMethod === "speedy_office") {
+      if (!selectedSite) {
+        setMsg("Моля, изберете град за офис на Спиди.");
+        return;
+      }
+
+      if (!selectedOfficeId || !selectedOfficeName) {
+        setMsg("Моля, изберете офис на Спиди.");
+        return;
+      }
     }
 
     if (deliveryMethod === "address" && !customer.address_1.trim()) {
@@ -118,7 +205,10 @@ export default function CheckoutPage() {
           customer,
           delivery: {
             method: deliveryMethod,
-            office: speedyOffice,
+            officeId: selectedOfficeId ? Number(selectedOfficeId) : undefined,
+            officeName: selectedOfficeName || undefined,
+            siteId: selectedSite?.id,
+            siteName: selectedSite?.name,
           },
           payment: {
             method: paymentMethod,
@@ -139,13 +229,15 @@ export default function CheckoutPage() {
         throw new Error(json?.details || json?.error || "Checkout failed");
       }
 
-
-cart.clear();
-router.push(
-  `/checkout/success?order_id=${encodeURIComponent(String(json.order_id))}&payment_method=${encodeURIComponent(String(json.payment_method || ""))}`
-);
-router.refresh();
-
+      cart.clear();
+      router.push(
+        `/checkout/success?order_id=${encodeURIComponent(
+          String(json.order_id)
+        )}&payment_method=${encodeURIComponent(
+          String(json.payment_method || "")
+        )}`
+      );
+      router.refresh();
     } catch (err: any) {
       setMsg(String(err?.message || err));
     } finally {
@@ -160,6 +252,29 @@ router.refresh();
     setCustomer((prev) => ({ ...prev, [key]: value }));
   }
 
+  function selectSite(site: SpeedySite) {
+    setSelectedSite(site);
+    setSiteQuery(site.name);
+    setCustomer((prev) => ({
+      ...prev,
+      city: site.name,
+      postcode: site.postCode || prev.postcode,
+    }));
+    setSelectedOfficeId("");
+    setSelectedOfficeName("");
+    setOfficeResults([]);
+    setSiteResults([]);
+  }
+
+  function officeLabel(office: SpeedyOffice) {
+    return (
+      office.address?.fullAddressString ||
+      office.address?.siteAddressString ||
+      office.address?.localAddressString ||
+      office.name
+    );
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between gap-4">
@@ -169,7 +284,6 @@ router.refresh();
             Попълнете данните за доставка и потвърдете поръчката.
           </p>
         </div>
-
       </div>
 
       {cart.items.length === 0 ? (
@@ -234,21 +348,72 @@ router.refresh();
                         Доставка до адрес
                       </div>
                       <div className="mt-1 text-sm text-black/60">
-                        Доставката до адрес се уточнява допълнително.
+                        Доставката се заплаща от клиента директно на Спиди.
                       </div>
                     </div>
                   </label>
                 </div>
 
                 {deliveryMethod === "speedy_office" ? (
-                  <div className="mt-4">
-                    <input
+                  <div className="mt-4 space-y-4">
+                    <div className="relative">
+                      <input
+                        className="w-full rounded-xl border border-black/10 bg-white p-3"
+                        placeholder="Град за офис на Спиди"
+                        value={siteQuery}
+                        onChange={(e) => {
+                          setSiteQuery(e.target.value);
+                          setSelectedSite(null);
+                          setSelectedOfficeId("");
+                          setSelectedOfficeName("");
+                          setOfficeResults([]);
+                        }}
+                      />
+
+                      {siteResults.length > 0 ? (
+                        <div className="absolute z-10 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-black/10 bg-white shadow-lg">
+                          {siteResults.map((site) => (
+                            <button
+                              key={site.id}
+                              type="button"
+                              className="block w-full border-b border-black/5 px-3 py-3 text-left text-sm hover:bg-neutral-50"
+                              onClick={() => selectSite(site)}
+                            >
+                              {site.name}
+                              {site.postCode ? ` (${site.postCode})` : ""}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <select
                       className="w-full rounded-xl border border-black/10 bg-white p-3"
-                      placeholder="Офис на Спиди (напр. Русе Център)"
-                      value={speedyOffice}
-                      onChange={(e) => setSpeedyOffice(e.target.value)}
+                      value={selectedOfficeId}
+                      onChange={(e) => {
+                        const office = officeResults.find(
+                          (x) => String(x.id) === e.target.value
+                        );
+                        setSelectedOfficeId(e.target.value);
+                        setSelectedOfficeName(office?.name || "");
+                      }}
+                      disabled={!selectedSite || officeResults.length === 0}
                       required
-                    />
+                    >
+                      <option value="">
+                        {!selectedSite
+                          ? "Първо изберете град"
+                          : officeResults.length === 0
+                          ? "Няма намерени офиси"
+                          : "Изберете офис"}
+                      </option>
+
+                      {officeResults.map((office) => (
+                        <option key={office.id} value={office.id}>
+                          {office.name} — {officeLabel(office)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ) : null}
               </div>
@@ -442,7 +607,7 @@ router.refresh();
                 <span className="text-black/60">
                   {deliveryMethod === "speedy_office"
                     ? "Безплатно до офис на Спиди"
-                    : "До адрес"}
+                    : "До адрес - плаща се на Спиди"}
                 </span>
               </div>
 

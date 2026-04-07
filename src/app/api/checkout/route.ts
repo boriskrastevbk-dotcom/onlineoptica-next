@@ -20,7 +20,10 @@ type CheckoutBody = {
   };
   delivery?: {
     method?: "speedy_office" | "address";
-    office?: string;
+    officeId?: number;
+    officeName?: string;
+    siteId?: number;
+    siteName?: string;
   };
   items: {
     productId: number;
@@ -149,14 +152,18 @@ export async function POST(req: Request) {
     });
 
     const deliveryMethod = body.delivery?.method || "address";
-    const deliveryOffice = (body.delivery?.office || "").trim();
+    const deliveryOfficeName = (body.delivery?.officeName || "").trim();
+    const deliveryOfficeId = body.delivery?.officeId;
+    const deliverySiteName = (body.delivery?.siteName || "").trim();
 
     const deliveryText =
       deliveryMethod === "speedy_office"
         ? `Безплатна доставка до офис на Спиди${
-            deliveryOffice ? `: ${deliveryOffice}` : ""
+            deliveryOfficeName ? `: ${deliveryOfficeName}` : ""
+          }${deliverySiteName ? `, ${deliverySiteName}` : ""}${
+            deliveryOfficeId ? ` (ID: ${deliveryOfficeId})` : ""
           }`
-        : "Доставка до адрес";
+        : "Доставка до адрес - за сметка на клиента, плаща се директно на Спиди";
 
     const noteParts = [
       `Метод на доставка: ${deliveryText}`,
@@ -164,6 +171,11 @@ export async function POST(req: Request) {
     ].filter(Boolean);
 
     const paymentMethod = body.payment?.method === "bacs" ? "bacs" : "cod";
+
+    const shippingAddress =
+      deliveryMethod === "address"
+        ? body.customer.address_1
+        : [deliveryOfficeName, deliverySiteName].filter(Boolean).join(", ");
 
     const orderPayload = {
       payment_method: paymentMethod,
@@ -176,10 +188,7 @@ export async function POST(req: Request) {
       billing: {
         first_name: body.customer.first_name,
         last_name: body.customer.last_name,
-        address_1:
-          deliveryMethod === "address"
-            ? body.customer.address_1
-            : deliveryOffice,
+        address_1: shippingAddress,
         city: body.customer.city,
         postcode: body.customer.postcode || "",
         country: "BG",
@@ -190,10 +199,7 @@ export async function POST(req: Request) {
       shipping: {
         first_name: body.customer.first_name,
         last_name: body.customer.last_name,
-        address_1:
-          deliveryMethod === "address"
-            ? body.customer.address_1
-            : deliveryOffice,
+        address_1: shippingAddress,
         city: body.customer.city,
         postcode: body.customer.postcode || "",
         country: "BG",
@@ -201,6 +207,12 @@ export async function POST(req: Request) {
 
       customer_note: noteParts.join("\n"),
       line_items,
+      meta_data: [
+        { key: "_delivery_method", value: deliveryMethod },
+        { key: "_speedy_office_id", value: deliveryOfficeId || "" },
+        { key: "_speedy_office_name", value: deliveryOfficeName || "" },
+        { key: "_speedy_site_name", value: deliverySiteName || "" },
+      ],
     };
 
     const url = appendWooAuth(new URL(`${baseUrl}/wp-json/wc/v3/orders`));
@@ -244,7 +256,9 @@ export async function POST(req: Request) {
           items: body.items,
           paymentMethod,
           deliveryMethod,
-          deliveryOffice,
+          deliveryOffice: [deliveryOfficeName, deliverySiteName]
+            .filter(Boolean)
+            .join(", "),
         }),
         6000
       );
