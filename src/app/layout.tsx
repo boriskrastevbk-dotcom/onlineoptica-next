@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next"
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -38,6 +39,8 @@ export default async function RootLayout({
             </div>
           </footer>
         </CartProvider>
+
+	<Analytics />
       </body>
     </html>
   );
